@@ -1,0 +1,32 @@
+elements
+5
+(
+C
+H
+N
+O
+Ar
+)
+;
+
+species
+4
+(
+AR
+N2
+O2
+IC8H18
+)
+;
+
+reactions
+{
+    un-named-reaction-0
+    {
+        type            reversibleArrheniusReaction;
+        reaction        "N2 = N2";
+        A               38700;
+        beta            2.7;
+        Ta              3149.977155;
+    }
+}

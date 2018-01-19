@@ -1,0 +1,101 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+| =========                 |                                                 |
+| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
+|  \\    /   O peration     | Version:  dev                                   |
+|   \\  /    A nd           | Web:      www.OpenFOAM.org                      |
+|    \\/     M anipulation  |                                                 |
+\*---------------------------------------------------------------------------*/
+strokePhase     1;
+
+CR              17;
+
+stroke          0.361263;
+
+A               0.023765;
+
+B               0.0241725;
+
+C               0.0238187;
+
+D               0.0247;
+
+E               0.0142989;
+
+F               0.00978064;
+
+G               0.00341757;
+
+H               0.00425791;
+
+I               0.00540352;
+
+J               0.025;
+
+acceleration    2358.37;
+
+aSFrac          0.187339;
+
+deceleration    16961.4;
+
+internalField
+{
+    U               ( 0 0 0 );
+    omega           0.00015;
+    k               1.5e-06;
+    T               550;
+    p               100000;
+    O2              0.225606;
+    N2              0.742245;
+    IC8H18          0.032149;
+}
+
+wall
+{
+    p
+    {
+        type            zeroGradient;
+    }
+    U
+    {
+        type            fixedValue;
+        value           uniform ( 0 0 0 );
+    }
+    T
+    {
+        type            fixedValue;
+        value           uniform 350;
+    }
+    k
+    {
+        type            kqRWallFunction;
+        value           uniform 1.5e-06;
+    }
+    nut
+    {
+        type            nutkWallFunction;
+        value           uniform 0;
+    }
+    alphat
+    {
+        type            compressible::alphatWallFunction;
+        Prt             0.85;
+        value           uniform 0;
+    }
+    omega
+    {
+        type            omegaWallFunction;
+        value           uniform 0.00015;
+    }
+}
+
+piston
+{
+    U
+    {
+        type            movingWallVelocity;
+        value           uniform ( 0 0 0 );
+    }
+}
+
+
+// ************************************************************************* //

@@ -1,0 +1,353 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+| =========                 |                                                 |
+| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
+|  \\    /   O peration     | Version:  3.0.x                                 |
+|   \\  /    A nd           | Web:      www.OpenFOAM.org                      |
+|    \\/     M anipulation  |                                                 |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      blockMeshDict;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+#include "${FOAM_CASE}/constant/caseSettings"
+
+//cell height
+cellHChannel 0.0003;
+cellWCrevice 0.0003;
+cellWChamber 0.0005;
+cellHChamber 0.002;
+
+//angle for wedge
+//tgW     #calc "tan(degToRad(1.0))";
+tgW     0.02;
+
+
+#codeStream
+{
+    codeInclude
+    #{
+        #include "mathematicalConstants.H"
+    #};
+
+    code
+    #{
+        //y corresponding to the different x above
+        scalar yA = $tgW*$A;
+        os << "yA    " << yA << ";" << endl;
+        os << "minyA " << -1.0*yA<< ";" << endl;
+        scalar yB = $tgW*$B;
+        os << "yB    " << yB << ";" << endl;
+        os << "minyB " << -1.0*yB<< ";" << endl;
+        scalar yC = $tgW*$C;
+        os << "yC    " << yC << ";" << endl;
+        os << "minyC " << -1.0*yC<< ";" << endl;
+        scalar yD = $tgW*$D;
+        os << "yD    " << yD << ";" << endl;
+        os << "minyD " << -1.0*yD<< ";" << endl;
+        scalar yE = $tgW*$E;
+        os << "yE    " << yE << ";" << endl;
+        os << "minyE " << -1.0*yE<< ";" << endl;
+        scalar yJ = $tgW*$J;
+        os << "yJ    " << yJ << ";" << endl;
+        os << "minyJ " << -1.0*yJ<< ";" << endl;
+
+        //z of crevice taking piston as 0
+        scalar zF = -1.0*$F;
+        os << "zF    " << zF << ";" << endl;
+        scalar zG = zF - $G;
+        os << "zG    " << zG  << ";" << endl;
+        scalar zH = zG - $H;
+        os << "zH    " << zH  << ";" << endl;
+        scalar zI = zH - $I;
+        os << "zI    " << zI  << ";" << endl;
+
+        //volume of crevices
+        scalar pi = constant::mathematical::pi;
+        scalar Vcrev =
+            pi*sqr($J)*($F+$G+$H+$I) 
+           -$F*pi/3.0*(sqr($A)+sqr($C)+$A*$C)
+           -$G*pi/3.0*(sqr($C)+sqr($B)+$B*$C)
+           -$H*pi*sqr($E)
+           -$I*pi*sqr($D);
+
+        scalar hCrev = Vcrev / pi / sqr($J);
+        //height of chamber computed from stroke, CR, and volume of crevices
+        // CR = (V_main_BDC+V_crev)/(V_main_BDC+V_crev-stroke*surf_piston)
+        // hChamber*surf_piston = V_main = -Vcrev + CR/(CR-1)*stroke*surf
+        // hChamber = CR/(CR-1)*stroke - Vcrev / surf_piston
+        scalar hChamber = float($CR)*$stroke/float($CR-1.0) - hCrev;
+        os << "hChamber " << hChamber << ";" << endl;
+
+        //cell parameters
+        os << "nCellHChannel1 " << round($F/$cellHChannel)       << ";" << endl;
+        os << "nCellHChannel2 " << round($G/$cellHChannel)       << ";" << endl;
+        os << "nCellHCrev     " << round($H/$cellHChannel)       << ";" << endl;
+        os << "nCellWCrev     " << round(($J-$E)/$cellWCrevice)  << ";" << endl;
+        os << "nCellHSeal     " << round($I/$cellHChannel)       << ";" << endl;
+        os << "nCellHChamber  " << round(hChamber/$cellHChamber)<< ";" << endl;
+        os << "nCellWChamber  " << round($J/$cellWChamber)       << ";" << endl;
+    #};
+};
+
+
+convertToMeters 1;
+
+
+vertices
+(
+//main chamber
+    (0     0      0)	//0
+    ($J	   $minyJ 0)	//1
+    ($J	   $yJ	  0)	//2
+    (0	   0	  $hChamber)//3
+    ($J	   $minyJ $hChamber)//4
+    ($J    $yJ    $hChamber)//5
+//first block for crevice
+    ($A    $minyA 0)   //6
+    ($A    $yA    0)   //7
+    ($J    $minyJ 0)   //8
+    ($J    $yJ    0)   //9
+    ($C    $minyC $zF)   //10
+    ($C    $yC    $zF)   //11
+    ($J    $minyJ $zF)   //12
+    ($J    $yJ    $zF)   //13
+//second block for crevice
+    ($C    $minyC $zF)   //14
+    ($C    $yC    $zF)   //15
+    ($J    $minyJ $zF)   //16
+    ($J    $yJ    $zF)   //17
+    ($B    $minyB $zG)   //18
+    ($B    $yB    $zG)   //19
+    ($J    $minyJ $zG)   //20
+    ($J    $yJ    $zG)   //21
+//third block for crevice (crevice main volume)
+    ($E    $minyE $zG)   //22
+    ($E    $yE    $zG)   //23
+    ($J    $minyJ $zG)   //24
+    ($J    $yJ    $zG)   //25
+    ($E    $minyE $zH)   //26
+    ($E    $yE    $zH)   //27
+    ($J    $minyJ $zH)   //28
+    ($J    $yJ    $zH)   //29
+//fourth block for crevice (channel to seal)
+    ($D    $minyD $zH)   //30
+    ($D    $yD    $zH)   //31
+    ($J    $minyJ $zH)   //32
+    ($J    $yJ    $zH)   //33
+    ($D    $minyD $zI)   //34
+    ($D    $yD    $zI)   //35
+    ($J    $minyJ $zI)   //36
+    ($J    $yJ    $zI)   //37
+);
+
+
+blocks
+(
+    hex (0 1 2 0 3 4 5 3) ($nCellWChamber 1 $nCellHChamber)
+    simpleGrading
+    (
+        (
+            (0.9 0.7 1)    // 90% x-dir, 60% cells, expansion = 1
+            (0.1 0.3 0.25) // 10% x-dir, 40% cells, expansion = 0.25 (1/4)
+        )
+        1
+        (
+            (0.03 0.12 2)
+            (0.94 0.76 1)
+            (0.03 0.12 0.5)
+        )                  // z-direction expansion ratio
+    )
+    //first block crevice
+    hex (10 12 13 11 6 8 9 7) (12 1 $nCellHChannel1) 
+    simpleGrading
+    (
+        (
+            (0.3 0.4 3)
+            (0.4 0.2 1)
+            (0.3 0.4 0.333)
+        )
+        1
+        1
+    )
+    //second block crevice
+    hex (18 20 21 19 14 16 17 15) (12 1 $nCellHChannel2) 
+    simpleGrading
+    (
+        (
+            (0.3 0.4 3)
+            (0.4 0.2 1)
+            (0.3 0.4 0.333)
+        )
+        1
+        1
+    )
+    //third block crevice
+    hex (26 28 29 27 22 24 25 23) ($nCellWCrev 1 $nCellHCrev)
+    simpleGrading
+    (
+        (
+            (0.15 0.25 2)
+            (0.7 0.5 1)
+            (0.15 0.25 0.5)
+        )
+        1
+        (
+            (0.2 0.25 2)
+            (0.6 0.5 1)
+            (0.2 0.25 0.5)
+        )
+    )
+    //fourth block crevice
+    hex (34 36 37 35 30 32 33 31) (12 1 $nCellHSeal) simpleGrading (1 1 1)
+);
+
+edges
+(
+);
+
+boundary
+(
+    internalChamberToFirstBlock
+    {
+        type empty;
+        faces
+        (
+            (6 8 9 7)
+        );
+    }
+    internalFirstBlockToSecondBlock
+    {
+        type empty;
+        faces
+        (
+            (10 11 13 12)
+        );
+    }
+    internalSecondBlockToFirstBlock
+    {
+        type empty;
+        faces
+        (
+            (16 17 15 14)
+        );
+    }
+    internalSecondBlockToCrevice
+    {
+        type empty;
+        faces
+        (
+            (18 20 21 19)
+    	);
+    }
+    internalSealToCrevice
+    {
+        type empty;
+        faces
+        (
+            (30 32 33 31)
+        );
+    }
+    creviceUp
+    {
+        type wall;
+        faces
+        (
+            (22 24 25 23)
+        );
+    }
+    creviceDown
+    {
+        type wall;
+        faces
+        (
+            (28 29 27 26)
+        );
+    }
+    front
+    {
+        type wedge;
+        faces
+        (
+            (0 1 4 3)
+	        (6 10 12 8)
+	        (14 18 20 16)
+	        (22 26 28 24)
+            (30 34 36 32)
+        );
+    }
+    back
+    {
+        type wedge;
+        faces
+        (
+            (0 3 5 2)
+	        (7 9 13 11)
+	        (15 17 21 19)
+	        (23 25 29 27)
+            (31 33 37 35)
+        );
+    }
+    piston
+    {
+        type wall;
+        faces
+        (
+            (0 2 1 0)
+        );
+    }
+    crevice
+    {
+        type wall;
+        faces
+        (
+	        (6 7 11 10)
+	        (14 15 19 18)
+	        (22 23 27 26)
+            (35 37 36 34)
+            (30 31 35 34)
+        );
+    }
+    cylinderHead
+    {
+        type wall;
+        faces
+        (
+            (3 4 5 3)
+        );
+    }
+    axis
+    {
+        type empty;
+        faces
+        (
+            (0 3 3 0)
+        );
+    }
+    liner
+    {
+        type wall;
+        faces
+        (
+            (1 2 5 4)
+	    (9 8 12 13)
+	    (16 20 21 17)
+	    (24 28 29 25)
+            (32 36 37 33)
+        );
+    }
+);
+
+mergePatchPairs
+(
+   ( piston internalChamberToFirstBlock )
+   ( creviceUp internalSecondBlockToCrevice )
+   ( creviceDown internalSealToCrevice )
+   ( internalFirstBlockToSecondBlock internalSecondBlockToFirstBlock )
+);
+
+// ************************************************************************* //

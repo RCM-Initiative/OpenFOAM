@@ -1,0 +1,51 @@
+#!/bin/sh
+cd ${0%/*} || exit 1    # Run from this directory
+
+# Source tutorial run functions
+. $WM_PROJECT_DIR/bin/tools/RunFunctions
+
+
+#change value of parameters in caseSettings with this command
+#foamDictionary -entry wCrevice -set $i constant/caseSettings
+
+# Start Design Variables
+foamDictionary -entry stroke -set 0.36126301 constant/caseSettings
+foamDictionary -entry A -set 0.02376498 constant/caseSettings
+foamDictionary -entry B -set 0.02417249 constant/caseSettings
+foamDictionary -entry C -set 0.02381868 constant/caseSettings
+foamDictionary -entry E -set 0.01429888 constant/caseSettings
+foamDictionary -entry F -set 0.00978064 constant/caseSettings
+foamDictionary -entry G -set 0.00341757 constant/caseSettings
+foamDictionary -entry H -set 0.00425791 constant/caseSettings
+foamDictionary -entry I -set 0.00540352 constant/caseSettings
+foamDictionary -entry acceleration -set 2358.37100662 constant/caseSettings
+foamDictionary -entry aSFrac -set 0.18733924 constant/caseSettings
+foamDictionary -entry deceleration -set 16961.4351732 constant/caseSettings
+# End Design Variables
+
+
+
+runApplication blockMesh
+
+cp -r 0.orig 0
+
+foamDictionary -entry strokePhase -set 1 constant/caseSettings
+
+if runApplication $(getApplication); then
+    foamDictionary -entry strokePhase -set 2 constant/caseSettings
+    if runApplication -overwrite $(getApplication); then
+        foamDictionary -entry strokePhase -set 3 constant/caseSettings
+        if runApplication -overwrite $(getApplication); then
+            echo "All compression steps ran with success" 
+        else
+            echo "Error during execution of phase 3"
+        fi
+    else
+        echo "Error during execution of phase 2"
+    fi
+else
+    echo "Error during execution of phase 1"
+fi
+
+
+#------------------------------------------------------------------------------

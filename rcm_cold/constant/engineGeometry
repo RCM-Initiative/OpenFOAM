@@ -1,0 +1,114 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+| =========                 |                                                 |
+| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
+|  \\    /   O peration     | Version:  dev                                   |
+|   \\  /    A nd           | Web:      www.OpenFOAM.org                      |
+|    \\/     M anipulation  |                                                 |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    location    "constant";
+    object      engineGeometry;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+#include "${FOAM_CASE}/constant/caseSettings"
+#include "${FOAM_CASE}/system/blockMeshDict"
+
+engineMesh      layered;
+pistonLayers	0.001;
+
+engineType	freePiston;
+
+//pistonPositionTime	table ( (0 #calc "float($stroke)/1000*($CR/($CR-1))") (0.020 #calc "float($stroke)/1000/($CR-1)") );
+
+/*pistonPositionTime csvFile;
+pistonPositionTimeCoeffs
+{
+    nHeaderLine    	2;
+    componentColumns    (1);
+    refColumn     	0;
+    mergeSeparators	no;
+    file           	"pistonPosition.csv";
+    outOfBounds         clamp;
+    interpolationScheme	linear;
+}*/
+
+/*
+from stroke length, acceleration, and the fraction of the stroke
+spent to accelerate, we can have the various times
+Using the deceleration, and knowing the maximum speed from
+the acceleration phase, we can compute the fraction of the stroke
+for deceleration and then the fraction spent at constant speed
+*/
+
+#codeStream
+{
+    codeInclude
+    #{
+        #include "Tuple2.H"
+    #};
+
+    code
+    #{
+        scalar t_end_acc=sqrt($stroke*$aSFrac*2/$acceleration);
+        os << "t_end_acc " << t_end_acc << ";" << endl;
+        scalar max_piston_speed=t_end_acc * $acceleration;
+        os << "max_piston_speed " << max_piston_speed << ";" << endl;
+        scalar t_deceleration = max_piston_speed/$deceleration;
+        os << "t_deceleration " << t_deceleration << ";" << endl;
+        scalar dSFrac = sqr(t_deceleration) * $deceleration/2 / $stroke;
+        os << "dSFrac " << dSFrac << ";" << endl;
+        scalar cSFrac = 1.0-$aSFrac-dSFrac; //part of the stroke at constant speed
+        os << "cSFrac " << cSFrac << ";" << endl;
+        scalar t_constant_speed = cSFrac*$stroke/max_piston_speed;
+        os << "t_constant_speed " << t_constant_speed << ";" << endl;
+
+        os << "pistonPositionTime polynomial (" << endl;
+        switch (label($strokePhase))
+        {
+            case 1: //acceleration
+            {
+                os << Tuple2<scalar, label>($hChamber, 0);
+                os << Tuple2<scalar, label>(-$acceleration/2, 2);
+                break;
+            }
+            case 2: //constant speed
+            {
+                os << Tuple2<scalar, label>($hChamber-$aSFrac*$stroke+max_piston_speed*t_end_acc, 0);
+                os << Tuple2<scalar, label>(-max_piston_speed, 1);
+                break;
+            }
+            case 3: //deceleration
+            {
+                os << Tuple2<scalar, label>
+                        (
+                            $hChamber
+                           -($aSFrac+cSFrac)*$stroke
+                           +max_piston_speed*(t_end_acc+t_constant_speed)
+                           +$deceleration/2*sqr(t_end_acc+t_constant_speed)
+			   , 
+			0);
+                os << Tuple2<scalar, label>(-max_piston_speed-$deceleration*(t_end_acc+t_constant_speed), 1);
+                os << Tuple2<scalar, label>($deceleration/2, 2);
+                break;
+            }
+            default:
+            {
+                FatalErrorInFunction
+                    << "Phase (acceleration, constant speed or deceleration)"
+                    << " not specified"
+                    << exit(FatalError);
+            }
+        }
+        os << ");" << endl;
+    #};
+    }
+
+
+
+
+// ************************************************************************* //

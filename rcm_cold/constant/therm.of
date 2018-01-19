@@ -1,0 +1,100 @@
+N2
+{
+    specie
+    {
+        molWeight       28.0134;
+    }
+    thermodynamics
+    {
+        Tlow            200;
+        Thigh           5000;
+        Tcommon         1000;
+        highCpCoeffs    ( 2.92664 0.001487977 -5.684761e-07 1.009704e-10 -6.753351e-15 -922.7977 5.980528 );
+        lowCpCoeffs     ( 3.298677 0.00140824 -3.963222e-06 5.641515e-09 -2.444855e-12 -1020.9 3.950372 );
+    }
+    transport
+    {
+        As              1.512e-06;
+        Ts              120;
+    }
+    elements
+    {
+        N               2;
+    }
+}
+
+IC8H18
+{
+    specie
+    {
+        molWeight       114.23266;
+    }
+    thermodynamics
+    {
+        Tlow            200;
+        Thigh           5000;
+        Tcommon         1396;
+        highCpCoeffs    ( 27.137359 0.037900489 -1.29437358e-05 2.00760372e-09 -1.1640058e-13 -40795.8177 -123.277495 );
+        lowCpCoeffs     ( -4.20868893 0.111440581 -7.91346582e-05 2.92406242e-08 -4.43743191e-12 -29944.6875 44.9521701 );
+    }
+    transport
+    {
+        As              1.512e-06;
+        Ts              120;
+    }
+    elements
+    {
+        C               8;
+        H               18;
+    }
+}
+
+O2
+{
+    specie
+    {
+        molWeight       31.9988;
+    }
+    thermodynamics
+    {
+        Tlow            200;
+        Thigh           5000;
+        Tcommon         1000;
+        highCpCoeffs    ( 3.697578 0.0006135197 -1.258842e-07 1.775281e-11 -1.136435e-15 -1233.93 3.189166 );
+        lowCpCoeffs     ( 3.212936 0.001127486 -5.75615e-07 1.313877e-09 -8.768554e-13 -1005.249 6.034738 );
+    }
+    transport
+    {
+        As              1.512e-06;
+        Ts              120;
+    }
+    elements
+    {
+        O               2;
+    }
+}
+
+AR
+{
+    specie
+    {
+        molWeight       39.948;
+    }
+    thermodynamics
+    {
+        Tlow            200;
+        Thigh           5000;
+        Tcommon         1000;
+        highCpCoeffs    ( 2.5 0 0 0 0 -745.375 4.366001 );
+        lowCpCoeffs     ( 2.5 0 0 0 0 -745.375 4.366001 );
+    }
+    transport
+    {
+        As              1.512e-06;
+        Ts              120;
+    }
+    elements
+    {
+        Ar              1;
+    }
+}

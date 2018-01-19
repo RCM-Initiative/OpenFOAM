@@ -1,0 +1,98 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+| =========                 |                                                 |
+| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
+|  \\    /   O peration     | Version:  2.2.0                                 |
+|   \\  /    A nd           | Web:      www.OpenFOAM.org                      |
+|    \\/     M anipulation  |                                                 |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      controlDict;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+#include "${FOAM_CASE}/constant/engineGeometry"
+
+application             coldEngineFoam;
+
+startFrom               latestTime;
+
+
+#codeStream
+{
+    codeInclude
+    #{
+    #};
+
+    code
+    #{
+        switch (label($strokePhase))
+        {
+            case 1: //acceleration
+            {
+                os << "startTime " << 0 << ";"  <<endl;
+                os << "endTime " << $t_end_acc << ";"<< endl;
+                os << "writeInterval " << $t_end_acc/4.0 << ";"<< endl;
+                break;
+            }
+            case 2: //constant speed
+            {
+                os << "startTime " << $t_end_acc << ";"<< endl;
+                os << "endTime " << ($t_end_acc+$t_constant_speed)<< ";" << endl;
+                os << "writeInterval " << $t_constant_speed/10.0<< ";" << endl;
+                break;
+            }
+            case 3: //deceleration
+            {
+                os << "startTime " << ($t_end_acc+$t_constant_speed)<< ";" << endl;
+                os << "endTime " << ($t_end_acc+$t_constant_speed+$t_deceleration)<< ";" << endl;
+                os << "writeInterval " << $t_deceleration/4.0<< ";" << endl;
+                break;
+            }
+            default:
+            {
+                FatalErrorInFunction
+                    << "Phase (acceleration, constant speed or deceleration)"
+                    << " not specified"
+                    << exit(FatalError);
+            }
+        }
+    #};
+};
+
+stopAt                  endTime;
+
+
+deltaT                  5.0e-7;
+
+writeControl    adjustableRunTime;
+
+
+secondaryWriteControl   adjustableRunTime;
+
+secondaryWriteInterval  0.0001;
+
+purgeWrite              0;
+
+writeFormat             binary;
+
+writePrecision          12;
+
+writeCompression        off;
+
+timeFormat              general;
+
+timePrecision           10;
+
+runTimeModifiable       true;
+
+adjustTimeStep          yes;
+
+maxCo                   2;
+
+maxDeltaT		1E-2;
+
+// ************************************************************************* //
