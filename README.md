@@ -1,5 +1,6 @@
 # OpenFOAM
-This repository hosts the plug and play files to start simulating RCM with OpenFOAM
+This repository hosts the plug and play files to start simulating RCM with OpenFOAM.
+The case has been tested with the official release of OpenFOAM from openfoam.org.
 
 Case rcm_cold:
 
